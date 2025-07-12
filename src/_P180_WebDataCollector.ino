@@ -1,14 +1,14 @@
 #include "_Plugin_Helper.h"
-#ifdef USES_P099
+#ifdef USES_P180
 
 // #######################################################################################################
-// #################################### Plugin-099: Web Data Collector ################################
+// #################################### Plugin-180: Web Data Collector ################################
 // #######################################################################################################
 
-#define PLUGIN_099
-#define PLUGIN_ID_099 99
-#define PLUGIN_NAME_099 "Web Data Collector"
-#define PLUGIN_VALUENAME1_099 "Status"
+#define PLUGIN_180
+#define PLUGIN_ID_180 180
+#define PLUGIN_NAME_180 "Web Data Collector"
+#define PLUGIN_VALUENAME1_180 "Status"
 
 #ifdef ESP8266
 #include <ESP8266HTTPClient.h>
@@ -34,7 +34,7 @@ struct {
 }
 
 // Enhanced function to check current guest with your specific logic
-void Plugin_099_checkCurrentGuest(const String& address, const String& door, const String& tag) {
+void Plugin_180_checkCurrentGuest(const String& address, const String& door, const String& tag) {
   String log;
   bool found = false;
   
@@ -47,7 +47,7 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
   }
   
   // First check local storage
-  String currentGuests = Plugin_099_readFile(Plugin_099_Data.dataFilename);
+  String currentGuests = Plugin_180_readFile(Plugin_180_Data.dataFilename); currentGuests = Plugin_099_readFile(Plugin_099_Data.dataFilename);
   
   if (currentGuests.length() > 10) {
     // Parse local JSON data
@@ -108,7 +108,7 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
     }
     
     // Build URL for web request
-    String webUrl = Plugin_099_Data.baseUrl;
+    String webUrl = Plugin_180_Data.baseUrl;
     if (webUrl.length() == 0) {
       // Fallback to default URLs if not configured
       #ifdef ESP8266
@@ -129,7 +129,7 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
     webUrl += door;
     
     // Make web request
-    HttpResponse response = Plugin_099_httpGETRequest(webUrl.c_str());
+    HttpResponse response = Plugin_180_httpGETRequest(webUrl.c_str());
     
     if (response.isValid && response.data.length() > 10) {
       // Parse web response
@@ -156,7 +156,7 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
             }
             
             // Update local storage with new data
-            Plugin_099_writeFile(Plugin_099_Data.dataFilename, response.data);
+            Plugin_180_writeFile(Plugin_180_Data.dataFilename, response.data);
             
             // Trigger success event
             String command = "Event,success=1,";
@@ -176,7 +176,7 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
             }
             
             // Update local storage
-            Plugin_099_writeFile(Plugin_099_Data.dataFilename, response.data);
+            Plugin_180_writeFile(Plugin_180_Data.dataFilename, response.data);
             
             // Trigger admin success event
             const char *command = "Event,success=2,Admin";
@@ -188,7 +188,7 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
         
         // If we got new data but didn't find the tag, still update local storage
         if (!found && currentGuests != response.data) {
-          Plugin_099_writeFile(Plugin_099_Data.dataFilename, response.data);
+          Plugin_180_writeFile(Plugin_180_Data.dataFilename, response.data);
           String log = F("WebCollector: Updated local data from web");
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, log);
@@ -213,8 +213,8 @@ void Plugin_099_checkCurrentGuest(const String& address, const String& door, con
 }
 
 // Function to update currents data (like your original GetCurrents)
-bool Plugin_099_getCurrents(const String& path) {
-  String webUrl = Plugin_099_Data.baseUrl;
+bool Plugin_180_getCurrents(const String& path) {
+  String webUrl = Plugin_180_Data.baseUrl;
   if (webUrl.length() == 0) {
     // Fallback to default URLs if not configured
     #ifdef ESP8266
@@ -233,15 +233,15 @@ bool Plugin_099_getCurrents(const String& path) {
   webUrl += path;
   
   // Make HTTP request
-  HttpResponse response = Plugin_099_httpGETRequest(webUrl.c_str());
+  HttpResponse response = Plugin_180_httpGETRequest(webUrl.c_str());
   
   if (response.isValid && response.data.length() > 10) {
     // Read current local data
-    String localData = Plugin_099_readFile(Plugin_099_Data.dataFilename);
+    String localData = Plugin_180_readFile(Plugin_180_Data.dataFilename);
     
     // Compare and update if different
     if (localData != response.data) {
-      if (Plugin_099_writeFile(Plugin_099_Data.dataFilename, response.data)) {
+      if (Plugin_180_writeFile(Plugin_180_Data.dataFilename, response.data)) {
         String log = F("WebCollector: Updated currents data from web");
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, log);
@@ -275,7 +275,7 @@ struct HttpResponse {
   int statusCode;
 };
 
-HttpResponse Plugin_099_httpGETRequest(const char *serverName) {
+HttpResponse Plugin_180_httpGETRequest(const char *serverName) {
   HttpResponse response;
   response.data = "";
   response.isValid = false;
@@ -289,33 +289,33 @@ HttpResponse Plugin_099_httpGETRequest(const char *serverName) {
     if (strncmp(serverName, "https://", 8) == 0) {
       WiFiClientSecure secureClient;
       secureClient.setInsecure(); // Skip certificate verification for simplicity
-      http_099.begin(secureClient, s.c_str());
+      http_180.begin(secureClient, s.c_str());
     } else {
-      http_099.begin(client_099, s.c_str());
+      http_180.begin(client_180, s.c_str());
     }
     #endif // ifdef ESP8266
     
     #ifdef ESP32
-    http_099.begin(serverName);
+    http_180.begin(serverName);
     // ESP32 handles HTTPS automatically
     #endif // ifdef ESP32
     
     // Set timeout - longer for HTTPS
     bool isHttps = (strncmp(serverName, "https://", 8) == 0);
-    http_099.setTimeout(isHttps ? 15000 : 10000); // 15s for HTTPS, 10s for HTTP
+    http_180.setTimeout(isHttps ? 15000 : 10000); // 15s for HTTPS, 10s for HTTP
     
     // Add headers for better compatibility
-    http_099.addHeader("User-Agent", "ESPEasy-WebCollector/1.0");
-    http_099.addHeader("Accept", "application/json,text/plain,*/*");
+    http_180.addHeader("User-Agent", "ESPEasy-WebCollector/1.0");
+    http_180.addHeader("Accept", "application/json,text/plain,*/*");
     
     // Send HTTP GET request
-    int httpResponseCode = http_099.GET();
+    int httpResponseCode = http_180.GET();
     response.statusCode = httpResponseCode;
     
     if (httpResponseCode >= 200 && httpResponseCode < 300) {
       // Success response codes (2xx)
-      response.data = http_099.getString();
-      response.isValid = Plugin_099_validateData(response.data);
+      response.data = http_180.getString();
+      response.isValid = Plugin_180_validateData(response.data);
       
       String log = F("WebCollector: HTTP");
       log += isHttps ? F("S") : F("");
@@ -328,7 +328,7 @@ HttpResponse Plugin_099_httpGETRequest(const char *serverName) {
       }
     } else if (httpResponseCode >= 400) {
       // Client/Server error codes (4xx, 5xx)
-      String errorContent = http_099.getString();
+      String errorContent = http_180.getString();
       String log = F("WebCollector: HTTP");
       log += isHttps ? F("S") : F("");
       log += F(" Error code: ");
@@ -364,12 +364,12 @@ HttpResponse Plugin_099_httpGETRequest(const char *serverName) {
   }
   
   // Free resources
-  http_099.end();
+  http_180.end();
   return response;
 }
 
 // Function to validate if the received data is legitimate
-bool Plugin_099_validateData(const String& data) {
+bool Plugin_180_validateData(const String& data) {
   // Basic validation checks
   
   // Check minimum length
@@ -425,7 +425,7 @@ bool Plugin_099_validateData(const String& data) {
 }
 
 // Function to read file from filesystem
-String Plugin_099_readFile(const String& filename) {
+String Plugin_180_readFile(const String& filename) {
   String content = "";
   
   #ifdef ESP8266
@@ -456,7 +456,7 @@ String Plugin_099_readFile(const String& filename) {
 }
 
 // Function to write file to filesystem
-bool Plugin_099_writeFile(const String& filename, const String& content) {
+bool Plugin_180_writeFile(const String& filename, const String& content) {
   #ifdef ESP8266
   File file = SPIFFS.open(filename, "w");
   #endif // ifdef ESP8266
@@ -475,8 +475,8 @@ bool Plugin_099_writeFile(const String& filename, const String& content) {
 }
 
 // Function to compare and update data
-bool Plugin_099_updateData() {
-  if (Plugin_099_Data.baseUrl.length() == 0) {
+bool Plugin_180_updateData() {
+  if (Plugin_180_Data.baseUrl.length() == 0) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       addLog(LOG_LEVEL_ERROR, F("WebCollector: No URL configured"));
     }
@@ -484,7 +484,7 @@ bool Plugin_099_updateData() {
   }
   
   // Make HTTP request and validate response
-  HttpResponse response = Plugin_099_httpGETRequest(Plugin_099_Data.baseUrl.c_str());
+  HttpResponse response = Plugin_180_httpGETRequest(Plugin_180_Data.baseUrl.c_str());
   
   // Only proceed if we got valid data
   if (!response.isValid) {
@@ -496,12 +496,12 @@ bool Plugin_099_updateData() {
   }
   
   // Read current file data
-  String fileData = Plugin_099_readFile(Plugin_099_Data.dataFilename);
+  String fileData = Plugin_180_readFile(Plugin_180_Data.dataFilename);
   
   // Compare data - only update if different AND valid
   if (fileData != response.data) {
     // Data is different and valid, update file
-    if (Plugin_099_writeFile(Plugin_099_Data.dataFilename, response.data)) {
+    if (Plugin_180_writeFile(Plugin_180_Data.dataFilename, response.data)) {
       String log = F("WebCollector: Data updated from web (");
       log += response.data.length();
       log += F(" bytes)");
@@ -525,12 +525,12 @@ bool Plugin_099_updateData() {
 }
 
 // Main plugin function
-boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
+boolean Plugin_180(byte function, struct EventStruct *event, String &string) {
   boolean success = false;
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number = PLUGIN_ID_099;
+      Device[++deviceCount].Number = PLUGIN_ID_180;
       Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
       Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports = 0;
@@ -544,31 +544,31 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
     }
 
     case PLUGIN_GET_DEVICENAME: {
-      string = F(PLUGIN_NAME_099);
+      string = F(PLUGIN_NAME_180);
       break;
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_099));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_180));
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD: {
       // Web URL input
-      addFormTextBox(F("Base URL"), F("p099_baseurl"), PCONFIG_LABEL(0), 255);
+      addFormTextBox(F("Base URL"), F("p180_baseurl"), PCONFIG_LABEL(0), 255);
       addFormNote(F("Complete URL to fetch data from (e.g., https://example.com/api/data)"));
       
       // Filename input
-      addFormTextBox(F("Data Filename"), F("p099_filename"), PCONFIG_LABEL(1), 64);
+      addFormTextBox(F("Data Filename"), F("p180_filename"), PCONFIG_LABEL(1), 64);
       addFormNote(F("Filename to store data (e.g., /webdata.json)"));
       
       // Update interval
-      addFormNumericBox(F("Update Interval"), F("p099_interval"), PCONFIG_LONG(0), 5, 3600);
+      addFormNumericBox(F("Update Interval"), F("p180_interval"), PCONFIG_LONG(0), 5, 3600);
       addUnit(F("seconds"));
       addFormNote(F("How often to check for updates (5-3600 seconds)"));
       
       // Auto update checkbox
-      addFormCheckBox(F("Auto Update"), F("p099_autoupdate"), PCONFIG(0));
+      addFormCheckBox(F("Auto Update"), F("p180_autoupdate"), PCONFIG(0));
       addFormNote(F("Automatically update data at specified interval"));
       
       // Manual update button
@@ -576,7 +576,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
       addFormSubHeader(F("Manual Operations"));
       
       // Display current file content (first 500 chars)
-      String fileContent = Plugin_099_readFile(Plugin_099_Data.dataFilename);
+      String fileContent = Plugin_180_readFile(Plugin_180_Data.dataFilename);
       if (fileContent.length() > 0) {
         addFormSubHeader(F("Current File Content"));
         String displayContent = fileContent;
@@ -592,20 +592,20 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_WEBFORM_SAVE: {
       // Save configuration
-      strncpy_webserver_arg(PCONFIG_LABEL(0), F("p099_baseurl"));
-      strncpy_webserver_arg(PCONFIG_LABEL(1), F("p099_filename"));
-      PCONFIG_LONG(0) = getFormItemInt(F("p099_interval"));
-      PCONFIG(0) = isFormItemChecked(F("p099_autoupdate"));
+      strncpy_webserver_arg(PCONFIG_LABEL(0), F("p180_baseurl"));
+      strncpy_webserver_arg(PCONFIG_LABEL(1), F("p180_filename"));
+      PCONFIG_LONG(0) = getFormItemInt(F("p180_interval"));
+      PCONFIG(0) = isFormItemChecked(F("p180_autoupdate"));
       
       // Update global data
-      Plugin_099_Data.baseUrl = PCONFIG_LABEL(0);
-      Plugin_099_Data.dataFilename = PCONFIG_LABEL(1);
-      Plugin_099_Data.updateInterval = PCONFIG_LONG(0) * 1000; // Convert to milliseconds
-      Plugin_099_Data.autoUpdate = PCONFIG(0);
+      Plugin_180_Data.baseUrl = PCONFIG_LABEL(0);
+      Plugin_180_Data.dataFilename = PCONFIG_LABEL(1);
+      Plugin_180_Data.updateInterval = PCONFIG_LONG(0) * 1000; // Convert to milliseconds
+      Plugin_180_Data.autoUpdate = PCONFIG(0);
       
       // Ensure minimum interval
-      if (Plugin_099_Data.updateInterval < 5000) {
-        Plugin_099_Data.updateInterval = 5000;
+      if (Plugin_180_Data.updateInterval < 5000) {
+        Plugin_180_Data.updateInterval = 5000;
       }
       
       success = true;
@@ -614,14 +614,14 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_INIT: {
       // Initialize plugin data
-      Plugin_099_Data.baseUrl = PCONFIG_LABEL(0);
-      Plugin_099_Data.dataFilename = PCONFIG_LABEL(1);
-      Plugin_099_Data.updateInterval = PCONFIG_LONG(0) * 1000;
-      Plugin_099_Data.autoUpdate = PCONFIG(0);
+      Plugin_180_Data.baseUrl = PCONFIG_LABEL(0);
+      Plugin_180_Data.dataFilename = PCONFIG_LABEL(1);
+      Plugin_180_Data.updateInterval = PCONFIG_LONG(0) * 1000;
+      Plugin_180_Data.autoUpdate = PCONFIG(0);
       
       // Ensure minimum interval
-      if (Plugin_099_Data.updateInterval < 5000) {
-        Plugin_099_Data.updateInterval = 5000;
+      if (Plugin_180_Data.updateInterval < 5000) {
+        Plugin_180_Data.updateInterval = 5000;
       }
       
       // Initialize filesystem
@@ -637,7 +637,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
       }
       #endif // ifdef ESP32
       
-      Plugin_099_Data.lastUpdate = 0; // Force immediate update
+      Plugin_180_Data.lastUpdate = 0; // Force immediate update
       success = true;
       break;
     }
@@ -650,7 +650,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
         
         if (subcmd.equalsIgnoreCase(F("Update"))) {
           // Manual update command
-          bool updated = Plugin_099_updateData();
+          bool updated = Plugin_180_updateData();
           UserVar.setFloat(event->TaskIndex, 0, updated ? 1.0 : 0.0);
           
           String log = F("WebCollector: Manual update ");
@@ -664,7 +664,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
           // Read file command
           String filename = parseStringKeepCase(string, 3);
           if (filename.length() > 0) {
-            String content = Plugin_099_readFile(filename);
+            String content = Plugin_180_readFile(filename);
             
             String log = F("WebCollector: Read file ");
             log += filename;
@@ -681,7 +681,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
           // Set URL command
           String url = parseStringKeepCase(string, 3);
           if (url.length() > 0) {
-            Plugin_099_Data.baseUrl = url;
+            Plugin_180_Data.baseUrl = url;
             strncpy(PCONFIG_LABEL(0), url.c_str(), sizeof(PCONFIG_LABEL(0)) - 1);
             
             String log = F("WebCollector: URL set to ");
@@ -702,7 +702,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
         String tag = parseStringKeepCase(string, 5);
         
         if (subcmd.equalsIgnoreCase(F("CheckCurrents"))) {
-          Plugin_099_checkCurrentGuest(address, door, tag);
+          Plugin_180_checkCurrentGuest(address, door, tag);
           success = true;
         }
       }
@@ -715,7 +715,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
         
         if (subcmd.equalsIgnoreCase(F("CheckCurrents"))) {
           String path = address + "/" + door;
-          Plugin_099_getCurrents(path);
+          Plugin_180_getCurrents(path);
           success = true;
         }
       }
@@ -725,12 +725,12 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_FIFTY_PER_SECOND: {
       // Check for auto-update
-      if (Plugin_099_Data.autoUpdate && 
-          (millis() - Plugin_099_Data.lastUpdate) >= Plugin_099_Data.updateInterval) {
+      if (Plugin_180_Data.autoUpdate && 
+          (millis() - Plugin_180_Data.lastUpdate) >= Plugin_180_Data.updateInterval) {
         
-        bool updated = Plugin_099_updateData();
+        bool updated = Plugin_180_updateData();
         UserVar.setFloat(event->TaskIndex, 0, updated ? 1.0 : 0.0);
-        Plugin_099_Data.lastUpdate = millis();
+        Plugin_180_Data.lastUpdate = millis();
         
         if (updated) {
           sendData(event);
@@ -741,7 +741,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String &string) {
 
     case PLUGIN_READ: {
       // Read current status
-      String fileContent = Plugin_099_readFile(Plugin_099_Data.dataFilename);
+      String fileContent = Plugin_180_readFile(Plugin_180_Data.dataFilename);
       UserVar.setFloat(event->TaskIndex, 0, fileContent.length() > 0 ? 1.0 : 0.0);
       success = true;
       break;
